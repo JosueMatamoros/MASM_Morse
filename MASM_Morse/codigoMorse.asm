@@ -1,21 +1,35 @@
 include Irvine32.inc
 
 .data
-;------------------------------------------------------------------------------------------------------------------------
+;-------------------------------Configuracion Usuario--------------------------------------------------------
+    nombre db "Josue Matamoros", 0
+
+;----------------------------------------MENU----------------------------------------------------------------
     menuTitle db "Morse-Chat Menu", 0
     option1 db '1. Recibir Mensajes', 0
-    option2 db '2. Salir', 0
-    invalidOption db 'Opción inválida', 0
-;------------------------------------------------------------------------------------------------------------------------
-
-;------------------------------------------------------------------------------------------------------------------------
-    archivo db "C:\MASM_Morse\chatTemp.txt",0  ; Cambia esta ruta a la ubicación correcta
+    option2 db '2. Enviar Mensaje', 0
+    option3 db '3. Salir', 0
+    invalidOption db 'Opciï¿½n invï¿½lida', 0
+;---------------------------------------LISTENER-------------------------------------------------------------
+    archivo db "C:\MASM_Morse\chatTemp.txt",0  
     buffer db 255 dup(0) ; Buffer para almacenar el mensaje
-;------------------------------------------------------------------------------------------------------------------------
+    VK_ESCAPE EQU 27 ; Valor virtual de la tecla Esc
+;----------------------------------------Mensaje-------------------------------------------------------------
+    instrucciones1 BYTE "Ingrese su mensaje en codigo Morse.", 0
+    MAX = 80                ; MÃ¡ximo nÃºmero de caracteres a leer
+    morse_mensaje BYTE MAX+1 DUP (?) ; Espacio para almacenar la cadena (incluyendo el byte nulo)
+;-----------------------------------Manejo de archivos-------------------------------------------------------
+    fileName BYTE "C:\MASM_Morse\morse.txt",0
+    fileHandle HANDLE 0
 
 .code
 
 receiveMessages PROC
+	; Verificar si se presiono la tecla ESC
+    call ReadKey
+    cmp al, VK_ESCAPE
+    je volverMain
+
     ; Abrir el archivo en modo de lectura y escritura
     invoke CreateFile, ADDR archivo, GENERIC_READ or GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
     mov ebx, eax  ; Guardar el identificador del archivo en ebx
@@ -28,7 +42,8 @@ receiveMessages PROC
     ; Cerrar el archivo
     invoke CloseHandle, ebx
 
-    cmp byte ptr [buffer], 0 ; Comprobar si el archivo no estaba vacío
+    ; Comprobar si el archivo no estaba vacï¿½o
+    cmp byte ptr [buffer], 0 
     je NoNuevoMensaje
 
     ; Mostrar el mensaje en la terminal
@@ -41,7 +56,7 @@ receiveMessages PROC
     cmp ebx, INVALID_HANDLE_VALUE
     je NoNuevoMensaje
 
-    ; Escribir una cadena vacía en el archivo (para limpiarlo)
+    ; Escribir una cadena vacï¿½a en el archivo (para limpiarlo)
     mov edx, OFFSET buffer
     invoke WriteFile, ebx, edx, 1, ADDR buffer, NULL
 
@@ -51,11 +66,43 @@ receiveMessages PROC
 NoNuevoMensaje:
     jmp receiveMessages ; Volver a verificar infinitamente
 
+volverMain:
+	ret
 receiveMessages ENDP
 
-main PROC
-    call clrscr ; Limpia la pantalla
+newMessages PROC
+    ; Mostrar instrucciones al usuario
+    mov edx, OFFSET instrucciones1
+    call WriteString
+    call Crlf
 
+    ; Leer el mensaje del usuario
+    mov edx, OFFSET morse_mensaje
+    mov ecx, MAX
+    call ReadString
+
+    ret
+newMessages ENDP
+
+sendMessages PROC
+    ; Crear el archivo 
+    mov edx, OFFSET fileName
+    call CreateOutputFile
+    mov fileHandle, eax
+
+    ; Escribir el mensaje del usuario
+	mov eax, fileHandle
+	mov edx, OFFSET morse_mensaje
+    mov ecx, MAX
+    call WriteToFile
+
+    ; Cerrar el archivo
+    invoke CloseHandle, fileHandle
+    ret
+sendMessages ENDP
+
+main PROC
+	; Mostrar el menï¿½
     mov edx, offset menuTitle
     call WriteString
     call Crlf
@@ -65,16 +112,23 @@ main PROC
     mov edx, offset option2
     call WriteString
     call Crlf
+    mov edx, offset option3
+    call WriteString
+	call Crlf
 
-    call ReadInt  ; Lee la opción ingresada por el usuario
+    call ReadInt  ; Lee la opciï¿½n ingresada por el usuario
         
     ; if (opcion == 1) runReceiveMessages();
     cmp eax, 1
     je runReceiveMessages
 
-    ; if (opcion == 2) runExitProgram();
-    cmp eax, 2
-    je runExitProgram
+    ; if (opcion == 2) runSendMessage();
+	cmp eax, 2
+    je runSendMessage
+
+    ; if (opcion == 3) runSalirProgram();
+    cmp eax, 3
+    je runSalirProgram
 
     ; else runInvalidOption();
     jmp runInvalidOption
@@ -84,17 +138,24 @@ main PROC
         call receiveMessages
 		jmp main
 
-    runExitProgram:
-        call clrscr ; Limpia la pantalla
-		exit
+    runSendMessage:
+		call clrscr ; Limpia la pantalla
+		call newMessages
+        call sendMessages
+		jmp main
 
-	runInvalidOption:
-    call clrscr ; Limpia la pantalla
-    mov edx, offset invalidOption
-    call WriteString
-    call Crlf
-    jmp main
+    runSalirProgram:
+        call clrscr ; Limpia la pantalla
+        exit
 		
+	runInvalidOption:
+        call clrscr ; Limpia la pantalla
+        mov edx, offset invalidOption
+        call WriteString
+        call Crlf
+        jmp main
+
+    		
 main ENDP
 
 end main
