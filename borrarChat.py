@@ -18,4 +18,8 @@ documentos = coleccion_usuarios.stream()
 for documento in documentos:
     documento.reference.delete()
 
-print("Colección 'chat' eliminada exitosamente")
+# Eliminar los datos en chat.txt    
+with open("chat.txt", "w") as archivo:
+    archivo.write("")
+    
+print("Colección 'chat' eliminada Salirosamente")
