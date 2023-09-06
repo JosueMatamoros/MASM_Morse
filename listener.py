@@ -1,8 +1,14 @@
 import os
 import google.cloud.firestore
 
+# Obtener la ruta actual del script
+current_directory = os.path.dirname(os.path.abspath(__file__))
+
+# Combinar la ruta actual con el nombre del archivo JSON
+file_path = os.path.join(current_directory, "firebase_config.json")
+
 # Configura las credenciales del archivo JSON de la cuenta de servicio
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:/MASM_Morse/firebase_config.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = file_path
 
 # Inicializa el cliente de Firestore
 db = google.cloud.firestore.Client()
