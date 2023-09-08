@@ -18,6 +18,8 @@ include Irvine32.inc
     instrucciones1 BYTE "Ingrese su mensaje en codigo Morse.", 0
     MAX = 80                ; Máximo número de caracteres a leer
     morse_mensaje BYTE MAX+1 DUP (?) ; Espacio para almacenar la cadena (incluyendo el byte nulo)
+    identificador db '@', 0
+ 
 ;-----------------------------------Manejo de archivos-------------------------------------------------------
     fileName BYTE "C:\MASM_Morse\morse.txt",0
     fileHandle HANDLE 0
@@ -90,11 +92,25 @@ sendMessages PROC
     call CreateOutputFile
     mov fileHandle, eax
 
+    ; Escribir el nombre del usuario
+	mov eax, fileHandle
+	mov edx, OFFSET nombre
+    mov ecx, 15
+    call WriteToFile
+
+    ; Escribir el identificador del usuario
+    mov eax, fileHandle
+	mov edx, OFFSET identificador
+    mov ecx, 1
+    call WriteToFile
+
     ; Escribir el mensaje del usuario
 	mov eax, fileHandle
 	mov edx, OFFSET morse_mensaje
     mov ecx, MAX
     call WriteToFile
+
+
 
     ; Cerrar el archivo
     invoke CloseHandle, fileHandle

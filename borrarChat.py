@@ -29,4 +29,4 @@ for documento in documentos:
 with open("chat.txt", "w") as archivo:
     archivo.write("")
     
-print("Colección 'chat' eliminada Salirosamente")
+print("Colección 'chat' eliminada correctamente")
