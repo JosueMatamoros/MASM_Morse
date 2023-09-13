@@ -1,1 +1,2 @@
 C:\MASM_Morse\MASM_Morse\Debug\MASM_Morse.exe
+C:\Morse\MASM_Morse\Debug\MASM_Morse.exe

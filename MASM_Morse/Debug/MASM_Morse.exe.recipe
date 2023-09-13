@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\MASM_Morse\MASM_Morse\Debug\MASM_Morse.exe</FullPath>
+      <FullPath>C:\Morse\MASM_Morse\Debug\MASM_Morse.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />
