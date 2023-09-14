@@ -3,7 +3,7 @@ include Irvine32.inc
 .data
 ;-------------------------------CONFIGURACION DE USUARIO-----------------------------------------------------
     nombre db "Josue Matamoros", 0
-
+    largoNombre BYTE 0
 ;----------------------------------------MENU----------------------------------------------------------------
     menuTitle db ' ',0ah,0dh
     db '==============================================================',0ah,0dh
@@ -23,7 +23,7 @@ include Irvine32.inc
     db '===================',0ah,0dh
     db '> Salir            |',0ah,0dh
     db '===================',0ah,0dh,0
-    invalidOption db 'Opcinn inv�lida', 0
+    invalidOption db 'Opcinn invalida', 0
 ;---------------------------------------LISTENER-------------------------------------------------------------
     archivo db "C:\MASM_Morse\chatTemp.txt",0  
     buffer db 255 dup(0) ; Buffer para almacenar el mensaje
@@ -53,7 +53,10 @@ include Irvine32.inc
     espacio db " ", 0
     codigoMorse db 100 dup(?)  ; Buffer para almacenar el mensaje en codigo morse
     
-    instrucciones1 BYTE "Ingrese su mensaje en codigo Morse.", 0
+    instrucciones1 db ' ',0ah,0dh
+db '=======================================',0ah,0dh
+db '| Ingrese su mensaje en codigo morse: |',0ah,0dh
+db '=======================================',0ah,0dh,0
     MAX EQU 100
 ;---------------------------------------ENVIAR MENSAJE-------------------------------------------------------
     identificador db '@', 0
@@ -188,12 +191,13 @@ sendMessages PROC
 	mov edx, OFFSET nombre
     mov ecx, 15
     call WriteToFile
-
+    
     ; Escribir el identificador del usuario
     mov eax, fileHandle
 	mov edx, OFFSET identificador
     mov ecx, 1
     call WriteToFile
+
 
     ; Escribir el mensaje del usuario
 	mov eax, fileHandle
@@ -204,6 +208,7 @@ sendMessages PROC
     ; Cerrar el archivo
     invoke CloseHandle, fileHandle
     ret
+
 sendMessages ENDP
 
 checkCoords PROC
