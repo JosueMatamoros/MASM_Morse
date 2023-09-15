@@ -2,7 +2,7 @@ include Irvine32.inc
 
 .data
 ;-------------------------------CONFIGURACION DE USUARIO-----------------------------------------------------
-    nombre db "Josue Matamoros", 0
+    nombre db 'Josue Matamoros', 0
     largoNombre BYTE 0
 ;----------------------------------------MENU----------------------------------------------------------------
     menuTitle db ' ',0ah,0dh
@@ -21,13 +21,17 @@ include Irvine32.inc
     db '===================',0ah,0dh,0
     option3 db ' ',0ah,0dh
     db '===================',0ah,0dh
-    db '> Salir            |',0ah,0dh
+    db '> Salir           |',0ah,0dh
     db '===================',0ah,0dh,0
     invalidOption db 'Opcinn invalida', 0
 ;---------------------------------------LISTENER-------------------------------------------------------------
     archivo db "C:\MASM_Morse\chatTemp.txt",0  
     buffer db 255 dup(0) ; Buffer para almacenar el mensaje
     VK_ESCAPE EQU 27 ; Valor virtual de la tecla Esc
+    instruccione2 db ' ',0ah,0dh
+    db '=======================================',0ah,0dh
+    db '| Presione ESC para volver al menu    |',0ah,0dh
+    db '=======================================',0ah,0dh,0
 ;----------------------------------------MENSAJE-------------------------------------------------------------
     hStdIn dd 0 
     nRead dd 0
@@ -65,8 +69,148 @@ db '=======================================',0ah,0dh,0
 ;-----------------------------------------CHECK COORDS--------------------------------------------------------
     BufferInfo CONSOLE_SCREEN_BUFFER_INFO <>
 
-.code
+;--------------------------------------MENU CONFIGURACION---------------------------------------------------------------
+    tituloConfiguracion db ' ',0ah,0dh
+    db '==============================================================',0ah,0dh
+    db '|                                                            |',0ah,0dh
+    db '|                          CONFIGURACION                     |',0ah,0dh
+    db '|                                                            |',0ah,0dh
+	db '==============================================================',0ah,0dh
+    db 'Selecione una configuacion ',0ah,0dh,0
 
+    configuracion db ' ',0ah,0dh
+    db '===================',0ah,0dh
+    db '> Fondo Amarillo  |',0ah,0dh
+    db '===================',0ah,0dh
+    db '> Fondo celeste   |',0ah,0dh
+    db '===================',0ah,0dh
+    db '> Modo Oscuro     |',0ah,0dh
+    db '===================',0ah,0dh
+    db '> Modo Claro      |',0ah,0dh
+    db '===================',0ah,0dh
+    db '> Modo Programador|',0ah,0dh
+	db '===================',0ah,0dh
+    db '> Iniciar Chat    |',0ah,0dh
+	db '===================',0ah,0dh,0
+
+    menuFlag dd 1 ; Flag para ejecutar el menu de configuracion
+
+.code
+menuPrincipal PROC
+    ; Mostrar titulo de la configuracion
+    mov edx, offset tituloConfiguracion
+    call WriteString
+
+	; Mostrar opciones de configuracion
+    mov edx, offset configuracion
+    call writeString
+
+
+	
+menuPrincipal ENDP
+
+checkCoordsConfiguracion PROC
+    invoke GetStdHandle, STD_INPUT_HANDLE  ; Obtener el identificador de entrada estándar
+    mov hStdIn, eax
+
+    invoke GetConsoleMode, hStdIn, ADDR ConsoleMode ; Obtener el modo de consola
+    mov eax, 0090h          ; ENABLE_MOUSE_INPUT  ; Habilitar la entrada de ratón
+    invoke SetConsoleMode, hStdIn, eax ; Establecer el modo de consola
+
+    .WHILE TRUE
+        invoke ReadConsoleInput, hStdIn, ADDR InputRecord, 1, ADDR nRead
+        movzx eax, InputRecord.EventType
+        cmp eax, MOUSE_EVENT
+        jne skipMouseEvent
+
+        ; Verificar si se trata de un evento de clic izquierdo (BUTTON1_PRESSED)
+        cmp InputRecord.MouseEvent.dwButtonState, 1
+        jne skipMouseEvent
+
+        ; Procesar evento de clic izquierdo
+        movzx ebx, InputRecord.MouseEvent.dwMousePosition.Y
+
+        ; Comprobar si la coordenada Y es igual a 9, 11, 13, 15 
+
+        cmp ebx, 9
+        je fondoAmariilo
+        cmp ebx, 11
+		je fondoCeleste
+        cmp ebx, 13
+		je modoOscuro
+        cmp ebx, 15
+        je modoClaro
+        cmp ebx, 17
+        je modoProgramador
+        cmp ebx, 19
+		je runChat
+
+        skipMouseEvent:
+    .ENDW
+
+    done:
+        ret
+checkCoordsConfiguracion ENDP
+
+fondoCeleste:
+		mov eax, black(cyan*16)
+		jmp setTheme
+
+fondoAmariilo:
+		mov eax, black(yellow*16)
+		jmp setTheme
+
+modoOscuro:
+		mov eax, white(black*16)
+		jmp setTheme
+
+modoClaro:
+		mov eax, black(white*16)
+		jmp setTheme
+modoProgramador:
+		mov eax, green(black*16)
+		jmp setTheme
+
+setTheme:
+		call clrscr
+		call SetTextColor
+		call clrscr
+		call menuPrincipal
+
+runChat:
+		call clrscr
+		ret
+    
+checkCoords1 PROC
+    invoke GetStdHandle,STD_INPUT_HANDLE  ;Get the handle to the console input (storaged in hStdIn via eax)
+    mov hStdIn, eax
+
+    invoke GetConsoleMode, hStdIn, ADDR ConsoleMode  ;Get the console mode
+    mov eax, 0090h          ; ENABLE_MOUSE_INPUT
+    invoke SetConsoleMode, hStdIn, eax  ;Set the console mode
+
+    .WHILE InputRecord.KeyEvent.wVirtualKeyCode != VK_ESCAPE
+        
+        mov esi, 0
+
+        checkClick:
+        invoke ReadConsoleInput, hStdIn, ADDR InputRecord, 1, ADDR nRead
+        movzx  eax, InputRecord.EventType
+        cmp InputRecord.MouseEvent.dwButtonState, 0001h ;COMPARES WITH LEFT BUTTON
+        je clicked
+        jmp checkClick
+
+        clicked:
+            movzx eax, InputRecord.MouseEvent.dwMousePosition.X
+            call WriteDec
+            call Crlf
+            movzx eax, InputRecord.MouseEvent.dwMousePosition.Y
+            call WriteDec
+
+    done:
+        ret
+        .ENDW
+checkCoords1 ENDP
 
 receiveMessages PROC
 	; Verificar si se presiono la tecla ESC
@@ -243,12 +387,14 @@ checkCoords PROC
         skipMouseEvent:
     .ENDW
 
-done:
-    ret
+    done:
+        ret
 checkCoords ENDP
 
 runReceiveMessages:
     call clrscr ; Limpia la pantalla
+    mov edx, offset instruccione2
+    call WriteString
     call receiveMessages
     jmp main
 
@@ -264,7 +410,12 @@ runSalirProgram:
 
 
 main PROC
-    call clrscr ; Limpia la pantalla
+    ; Limpia la pantalla
+	 call clrscr 
+
+	; Mostrar el menu de configuracion
+    cmp menuFlag, 1
+    je ejecutarMenuConfiguracion
 
 	; Mostrar el menu
     mov edx, offset menuTitle
@@ -280,7 +431,16 @@ main PROC
     call WriteString
 	call Crlf
     
-    call checkCoords		
+    call checkCoords	
+    
+    ejecutarMenuConfiguracion:
+        call clrscr
+        call menuPrincipal
+        mov menuFlag, 0
+        jmp main
+       
+
 main ENDP
 
-end main
+END main
+```
