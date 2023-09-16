@@ -16,22 +16,28 @@ db = google.cloud.firestore.Client()
 # Referencia a la colección "chat"
 coleccion_chat = db.collection("chat")
 
+# Lista de palabras en código Morse que deseas censurar
+palabras_censurar = [".--. ..- - .-", "--. .- -.--", ".-.. ..- .. ...", ".... .. - .-.. . .-.", "-. .. --. --. .-"]
+
 def on_snapshot(doc_snapshot, changes, read_time):
     with open("chat.txt", "a") as archivo:
         for cambio in changes:
             if cambio.type.name == "ADDED":
                 mensaje = cambio.document.to_dict()
-                archivo.write(mensaje['nombre'] + "\n")
+                archivo.write(mensaje['nombre'] + "   " + mensaje['hora'] + "\n")
                 archivo.write(mensaje['mensaje'] + "\n")
-                archivo.write("---\n")
+                
+                archivo.write("\n")
 
     with open("chatTemp.txt", "w") as archivo:
         for cambio in changes:
             if cambio.type.name == "ADDED":
                 mensaje = cambio.document.to_dict()
-                archivo.write(mensaje['nombre'] + "\n")
-                archivo.write(mensaje['mensaje'] + "\n")
-                archivo.write("---\n")
+                codigo = mensaje['mensaje']
+                # Censura las palabras en el mensaje
+                for palabra in palabras_censurar:
+                    codigo = codigo.replace(palabra, "?")
+                archivo.write(mensaje['nombre'] + "   " + mensaje['hora'] +"@"+ codigo + " "+"\n")
 
 # Crea un observador para la colección "chat"
 chat_watch = coleccion_chat.on_snapshot(on_snapshot)
